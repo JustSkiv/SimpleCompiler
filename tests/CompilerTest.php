@@ -172,13 +172,11 @@ class CompilerTest extends TestCase
     public function progsProvider()
     {
         return [
-            ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
-            ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
-            ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-            ['[ x y z ] x * y - z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-//            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-
-
+//            ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
+//            ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
+//            ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
+//            ['[ x y z ] x * y - z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
+            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
 
         ];
     }

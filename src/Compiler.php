@@ -176,21 +176,32 @@ class Compiler
     public function sliceBodyParts($bodyParts): array
     {
         // find arg-slicer num
+        $slicerNum = false;
         $slicer = false;
         $inMainPart = true; //if in brackents, skip slicers
-        $argsSlicers = ['+', '-', '*', '/'];
-        $slicerNum = false;
-        foreach ($bodyParts as $n => $token) {
-            if ($inMainPart && in_array($token, $argsSlicers)) {
-                $slicerNum = $n;
-                $slicer = $token;
-                break;
-            }
 
-            if ($token == '(') {
-                $inMainPart = false;
-            } elseif ($token == ')') {
-                $inMainPart = true;
+        $argsSlicersGroups = [
+            ['*', '/'],
+            ['+', '-']
+        ];
+
+        foreach ($argsSlicersGroups as $argsSlicers) {
+            foreach ($bodyParts as $n => $token) {
+                if ($inMainPart && in_array($token, $argsSlicers)) {
+                    $slicerNum = $n;
+                    $slicer = $token;
+                    break;
+                }
+
+                if ($slicer) {
+                    break;
+                }
+
+                if ($token == '(') {
+                    $inMainPart = false;
+                } elseif ($token == ')') {
+                    $inMainPart = true;
+                }
             }
         }
 
