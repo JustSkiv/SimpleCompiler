@@ -178,16 +178,17 @@ class Compiler
         // find arg-slicer num
         $slicerNum = false;
         $slicer = false;
-        $inMainPart = true; //if in brackents, skip slicers
 
+        // arg groups, sorted by priority
         $argsSlicersGroups = [
-            ['*', '/'],
-            ['+', '-']
+            ['*', '/'], // priority 1
+            ['+', '-'], // priority 2
         ];
 
         foreach ($argsSlicersGroups as $argsSlicers) {
+            $openBracketsCount = 0; //if in brackets, skip slicers
             foreach ($bodyParts as $n => $token) {
-                if ($inMainPart && in_array($token, $argsSlicers)) {
+                if ($openBracketsCount == 0 && in_array($token, $argsSlicers)) {
                     $slicerNum = $n;
                     $slicer = $token;
                     break;
@@ -198,15 +199,26 @@ class Compiler
                 }
 
                 if ($token == '(') {
-                    $inMainPart = false;
+                    $openBracketsCount++;
                 } elseif ($token == ')') {
-                    $inMainPart = true;
+                    $openBracketsCount--;
                 }
             }
         }
 
         $firstPart = array_slice($bodyParts, 0, $slicerNum);
         $secondPart = array_slice($bodyParts, $slicerNum + 1);
+
+
+        if ($firstPart[0] == '(' && $firstPart[count($firstPart) - 1] == ')') {
+//            $firstPartTmp = array_slice($firstPart, 1, count($firstPart) - 2);
+            $firstPart = array_slice($firstPart, 1, count($firstPart) - 2);
+
+//       $leftBracketNum = array_search()
+        }
+        if ($secondPart[0] == '(' && $secondPart[count($secondPart) - 1] == ')') {
+            $secondPart = array_slice($secondPart, 1, count($secondPart) - 2);
+        }
 
         $res = [$firstPart, $secondPart, $slicer];
         return $res;

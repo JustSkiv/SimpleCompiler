@@ -88,20 +88,16 @@ class CompilerTest extends TestCase
         $this->assertInternalType('array', $secondPart);
         $this->assertInternalType('string', $slicer);
 
-        $this->assertEquals($firstPart[0], '(');
-        $this->assertEquals($firstPart[14], ')');
-        $this->assertEquals($firstPart[4], '*');
-        $this->assertEquals($firstPart[7], 5);
+        $this->assertEquals($firstPart[3], '*');
+        $this->assertEquals($firstPart[6], 5);
 
-        $this->assertEquals($secondPart[0], '(');
-        $this->assertEquals($secondPart[8], ')');
-        $this->assertEquals($secondPart[2], '+');
-        $this->assertEquals($secondPart[5], 2);
+        $this->assertEquals($secondPart[1], '+');
+        $this->assertEquals($secondPart[4], 2);
 
         $this->assertEquals($slicer, '/');
 
-        $this->assertCount(15, $firstPart);
-        $this->assertCount(9, $secondPart);
+        $this->assertCount(13, $firstPart);
+        $this->assertCount(7, $secondPart);
     }
 
     public function testArgAst()
@@ -176,7 +172,9 @@ class CompilerTest extends TestCase
 //            ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
 //            ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
 //            ['[ x y z ] x * y - z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
+//            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
+//            ['[ x y z ] (x + y) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
+            ['[ x y z ] ((x + y) + (a + b)) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 4]]],
 
         ];
     }
