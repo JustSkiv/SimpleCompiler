@@ -32,19 +32,6 @@ class CompilerTest extends TestCase
         $this->assertEquals(simulate($p3, [4,8,16]), 2, 'prog(4,8,6) == 2');
     }*/
 
-    /*public function testPass1()
-    {
-        $c = new Compiler();
-
-        $prog = '[ x y z ] ( 2*3*x + 5*y - 3*z ) / (1 + 3 + 2*2)';
-
-        $t1 = '{"op":"/","a":{"op":"-","a":{"op":"+","a":{"op":"*","a":{"op":"*","a":{"op":"imm","n":2},"b":{"op":"imm","n":3}},"b":{"op":"arg","n":0}},"b":{"op":"*","a":{"op":"imm","n":5},"b":{"op":"arg","n":1}}},"b":{"op":"*","a":{"op":"imm","n":3},"b":{"op":"arg","n":2}}},"b":{"op":"+","a":{"op":"+","a":{"op":"imm","n":1},"b":{"op":"imm","n":3}},"b":{"op":"*","a":{"op":"imm","n":2},"b":{"op":"imm","n":2}}}}';
-
-        $p1 = $c->pass1($prog);
-
-        $this->assertEquals($p1, json_decode($t1, true), 'Pass1');
-    }*/
-
     public function testGetArgs()
     {
         $c = new Compiler();
@@ -165,17 +152,30 @@ class CompilerTest extends TestCase
         $this->assertEquals($processed, $ast);
     }
 
+    /**
+     * @dataProvider progsProvider
+     */
+    public function testPass1($prog, $ast)
+    {
+        $c = new Compiler();
+
+        $p1 = $c->pass1($prog);
+
+        $this->assertEquals($p1, $ast, 'Pass1');
+    }
+
     public function progsProvider()
     {
         return [
-//            ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
-//            ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
-//            ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-//            ['[ x y z ] x * y - z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
-//            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
-//            ['[ x y z ] (x + y) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
-            ['[ x y z ] ((x + y) + (a + b)) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 4]]],
-
+            ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
+            ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
+            ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
+            ['[ x y z ] x * y - z', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '-', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
+            ['[ x y z ] x + y * z', ['op' => '*', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
+            ['[ x y z ] (x + y) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
+            ['[ x y z a b] (x + y) + (a + b) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],]],
+            ['[ x y z a b] (x + y) + ((a + b) + z)', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],]],
+            ['[ x y z a b] x + (y + a) + (b + z)', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 3]], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 4], 'b' => ['op' => 'arg', 'n' => 2]]],]],
         ];
     }
 

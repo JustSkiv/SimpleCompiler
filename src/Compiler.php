@@ -29,16 +29,16 @@ class Compiler
         return $tokens;
     }
 
-    /*public function pass1($program)
+    public function pass1($program)
     {
         // Returns an un-optimized AST
         $tokens = $this->tokenize($program);
 
         $args = $this->getArgs($tokens);
         $bodyParts = $this->getBodyParts($tokens);
+        $processed = $this->processProg($bodyParts, $args);
 
-
-        return false;
+        return $processed;
     }
 
     public function pass2($ast)
@@ -51,7 +51,7 @@ class Compiler
     {
         // Returns assembly instructions
         return false;
-    }*/
+    }
 
     /**
      * Get Args from program tokens
@@ -210,14 +210,50 @@ class Compiler
         $secondPart = array_slice($bodyParts, $slicerNum + 1);
 
 
-        if ($firstPart[0] == '(' && $firstPart[count($firstPart) - 1] == ')') {
-//            $firstPartTmp = array_slice($firstPart, 1, count($firstPart) - 2);
-            $firstPart = array_slice($firstPart, 1, count($firstPart) - 2);
+        $needSliceBracketsFirstPart = count($firstPart) > 2 && $firstPart[0] == '(' && $firstPart[count($firstPart) - 1] == ')';
+        if ($needSliceBracketsFirstPart) {
+            $firstPartTmp = array_slice($firstPart, 1, count($firstPart) - 2);
+//            $firstPart    = array_slice($firstPart, 1, count($firstPart) - 2);
 
-//       $leftBracketNum = array_search()
+            $opened = 0;
+            foreach ($firstPartTmp as $token) {
+                if ($token == '(') {
+                    $opened++;
+                } elseif ($token == ')') {
+                    $opened--;
+                }
+
+                if ($opened < 0) {
+                    break;
+                }
+            }
+
+            if ($opened == 0) {
+                $firstPart = $firstPartTmp;
+            }
         }
-        if ($secondPart[0] == '(' && $secondPart[count($secondPart) - 1] == ')') {
-            $secondPart = array_slice($secondPart, 1, count($secondPart) - 2);
+
+        $needSliceBracketsSecondPart = count($secondPart) > 2 && $secondPart[0] == '(' && $secondPart[count($secondPart) - 1] == ')';
+        if ($needSliceBracketsSecondPart) {
+            $secondPartTmp = array_slice($secondPart, 1, count($secondPart) - 2);
+//            $secondPart =   array_slice($secondPart, 1, count($secondPart) - 2);
+
+            $opened = 0;
+            foreach ($secondPartTmp as $token) {
+                if ($token == '(') {
+                    $opened++;
+                } elseif ($token == ')') {
+                    $opened--;
+                }
+
+                if ($opened < 0) {
+                    break;
+                }
+            }
+
+            if ($opened == 0) {
+                $secondPart = $secondPartTmp;
+            }
         }
 
         $res = [$firstPart, $secondPart, $slicer];
