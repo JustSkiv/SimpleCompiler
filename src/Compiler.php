@@ -181,9 +181,12 @@ class Compiler
 
         // arg groups, sorted by priority
         $argsSlicersGroups = [
-            ['*', '/'], // priority 1
-            ['+', '-'], // priority 2
+            ['+', '-'], // priority 1
+            ['*', '/'], // priority 2
         ];
+
+        // because we need left associative
+        $bodyParts = array_reverse($bodyParts);
 
         foreach ($argsSlicersGroups as $argsSlicers) {
             $openBracketsCount = 0; //if in brackets, skip slicers
@@ -206,8 +209,12 @@ class Compiler
             }
         }
 
-        $firstPart = array_slice($bodyParts, 0, $slicerNum);
-        $secondPart = array_slice($bodyParts, $slicerNum + 1);
+        // undo revert (left associative)
+        $secondPartReverted = array_slice($bodyParts, 0, $slicerNum);
+        $firsrtPartReverted = array_slice($bodyParts, $slicerNum + 1);
+
+        $secondPart = array_reverse($secondPartReverted);
+        $firstPart = array_reverse($firsrtPartReverted);
 
 
         $needSliceBracketsFirstPart = count($firstPart) > 2 && $firstPart[0] == '(' && $firstPart[count($firstPart) - 1] == ')';
