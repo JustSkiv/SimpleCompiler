@@ -167,19 +167,44 @@ class CompilerTest extends TestCase
     public function progsProvider()
     {
         return [
+//            ['[ x ] 1 + 4 + x', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
             ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
             ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
             ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
             ['[ x y z ] x * y - z', ['op' => '-', 'a' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
             ['[ x y z ] x + y * z', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]]],
             ['[ x y z ] (x + y) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
-            ['[ x y z a b] (x + y) + (a + b) + z', ['op'=>'+','a'=>['op'=>'+','a'=>['op'=>'+','a'=>['op'=>'arg','n'=>0,],'b'=>['op'=>'arg','n'=>1,],],'b'=>['op'=>'+','a'=>['op'=>'arg','n'=>3,],'b'=>['op'=>'arg','n'=>4,],],],'b'=>['op'=>'arg','n'=>2,],]],
+            ['[ x y z a b] (x + y) + (a + b) + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => 'arg', 'n' => 1,],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3,], 'b' => ['op' => 'arg', 'n' => 4,],],], 'b' => ['op' => 'arg', 'n' => 2,],]],
             ['[ x y z a b] (x + y) + ((a + b) + z)', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],]],
-            ['[ x y z a b] x + (y + a) + (b + z)', ['op'=>'+','a'=>['op'=>'+','a'=>['op'=>'arg','n'=>0,],'b'=>['op'=>'+','a'=>['op'=>'arg','n'=>1,],'b'=>['op'=>'arg','n'=>3,],],],'b'=>['op'=>'+','a'=>['op'=>'arg','n'=>4,],'b'=>['op'=>'arg','n'=>2,],],]],
+            ['[ x y z a b] x + (y + a) + (b + z)', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1,], 'b' => ['op' => 'arg', 'n' => 3,],],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 4,], 'b' => ['op' => 'arg', 'n' => 2,],],]],
         ];
     }
 
-    /*public function testPass2()
+    /**
+     * @dataProvider simplifyProvider
+     */
+    public function testSimplify($ast, $astSimple)
+    {
+        $c = new Compiler();
+
+        $simplified = $c->simplify($ast);
+
+        $this->assertEquals($simplified, $astSimple);
+
+    }
+
+    public function simplifyProvider()
+    {
+        return [
+            [
+                //[ x ] 1 + 4 + x
+                ['op'=>'+','a'=>['op'=>'+','a'=>['op'=>'imm','n'=>1,],'b'=>['op'=>'imm','n'=>4,],],'b'=>['op'=>'arg','n'=>0,],],
+                ['op'=>'+','a'=>['op'=>'imm','n'=>5,],'b'=>['op'=>'arg','n'=>0,],],
+            ]
+        ];
+    }
+
+    public function testPass2()
     {
         $c = new Compiler();
 
@@ -191,5 +216,5 @@ class CompilerTest extends TestCase
         $p2 = $c->pass2($p1);
 
         $this->assertEquals($p2, json_decode($t2, true), 'Pass2');
-    }*/
+    }
 }

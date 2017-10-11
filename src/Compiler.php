@@ -44,7 +44,7 @@ class Compiler
     public function pass2($ast)
     {
         // Returns an AST with constant expressions reduced
-        return false;
+        return $this->simplify($ast);
     }
 
     public function pass3($ast)
@@ -169,7 +169,8 @@ class Compiler
     }
 
     /**
-     * TODO: priorities!
+     * Slice sub-program into two parts (ie get op, a, b)
+     *
      * @param $bodyParts
      * @return array
      */
@@ -220,7 +221,6 @@ class Compiler
         $needSliceBracketsFirstPart = count($firstPart) > 2 && $firstPart[0] == '(' && $firstPart[count($firstPart) - 1] == ')';
         if ($needSliceBracketsFirstPart) {
             $firstPartTmp = array_slice($firstPart, 1, count($firstPart) - 2);
-//            $firstPart    = array_slice($firstPart, 1, count($firstPart) - 2);
 
             $opened = 0;
             foreach ($firstPartTmp as $token) {
@@ -243,7 +243,6 @@ class Compiler
         $needSliceBracketsSecondPart = count($secondPart) > 2 && $secondPart[0] == '(' && $secondPart[count($secondPart) - 1] == ')';
         if ($needSliceBracketsSecondPart) {
             $secondPartTmp = array_slice($secondPart, 1, count($secondPart) - 2);
-//            $secondPart =   array_slice($secondPart, 1, count($secondPart) - 2);
 
             $opened = 0;
             foreach ($secondPartTmp as $token) {
@@ -265,6 +264,40 @@ class Compiler
 
         $res = [$firstPart, $secondPart, $slicer];
         return $res;
+    }
+
+    public function simplify($ast)
+    {
+        if ($ast['op'] == 'arg' || $ast['op'] == 'imm') {
+            return $ast;
+        }
+
+        $a = self::simplify($ast['a']);
+        $b = self::simplify($ast['b']);
+
+
+        $ast['a'] = $a;
+        $ast['b'] = $b;
+        $result = $ast;
+
+        if ($a['op'] == 'imm' && $b['op'] == 'imm') {
+            switch ($ast['op']) {
+                case '+':
+                    $result = ['op'=>'imm','n'=>$a['n'] + $b['n']];
+                    break;
+                case '-':
+                    $result = ['op'=>'imm','n'=>$a['n'] - $b['n']];
+                    break;
+                case '*':
+                    $result = ['op'=>'imm','n'=>$a['n'] * $b['n']];
+                    break;
+                case '/':
+                    $result = ['op'=>'imm','n'=>$a['n'] / $b['n']];
+                    break;
+            }
+        }
+
+        return $result;
     }
 
 }
