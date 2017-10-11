@@ -300,4 +300,26 @@ class Compiler
         return $result;
     }
 
+    // Here is a simulator for the target machine.
+    // It takes an array of assembly instructions and an array of arguments and returns the result.
+    function simulate($asm, $argv) {
+        list($r0, $r1) = [0, 0];
+        $stack = [];
+        foreach ($asm as $ins) {
+            if (substr($ins, 0, 2) == 'IM' || substr($ins, 0, 2) == 'AR') {
+                list($ins, $n) = [substr($ins, 0, 2), intval(substr($ins, 2))];
+            }
+            if ($ins == 'IM')      $r0 = $n;
+            else if ($ins == 'AR') $r0 = $argv[$n];
+            else if ($ins == 'SW') list($r0, $r1) = [$r1, $r0];
+            else if ($ins == 'PU') array_push($stack, $r0);
+            else if ($ins == 'PO') $r0 = array_pop($stack);
+            else if ($ins == 'AD') $r0 += $r1;
+            else if ($ins == 'SU') $r0 -= $r1;
+            else if ($ins == 'MU') $r0 *= $r1;
+            else if ($ins == 'DI') $r0 /= $r1;
+        }
+        return $r0;
+    }
+
 }
