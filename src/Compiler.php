@@ -283,16 +283,16 @@ class Compiler
         if ($a['op'] == 'imm' && $b['op'] == 'imm') {
             switch ($ast['op']) {
                 case '+':
-                    $result = ['op'=>'imm','n'=>$a['n'] + $b['n']];
+                    $result = ['op' => 'imm', 'n' => $a['n'] + $b['n']];
                     break;
                 case '-':
-                    $result = ['op'=>'imm','n'=>$a['n'] - $b['n']];
+                    $result = ['op' => 'imm', 'n' => $a['n'] - $b['n']];
                     break;
                 case '*':
-                    $result = ['op'=>'imm','n'=>$a['n'] * $b['n']];
+                    $result = ['op' => 'imm', 'n' => $a['n'] * $b['n']];
                     break;
                 case '/':
-                    $result = ['op'=>'imm','n'=>$a['n'] / $b['n']];
+                    $result = ['op' => 'imm', 'n' => $a['n'] / $b['n']];
                     break;
             }
         }
@@ -300,16 +300,123 @@ class Compiler
         return $result;
     }
 
+    public function assemble($ast)
+    {
+        $commands = [];
+
+        if (self::isTrivialOperation($ast)) {
+            $commands[] = self::commandLoad($ast['a']);
+
+            $commands[] = 'SW';
+
+            $commands[] = self::commandLoad($ast['b']);
+
+            $commands[] = self::commandForOperation($ast);
+        }
+
+        return $commands;
+    }
+
+    public static function commandLoad($ast)
+    {
+        if(!self::isTrivial($ast)){
+            return false;
+        }
+
+        $command = false;
+
+        switch ($ast['op']) {
+            case 'arg':
+                $command = 'AR';
+                break;
+            case 'imm':
+                $command = 'IM';
+                break;
+        }
+
+        $command .= ' ' . $ast['n'];
+
+        return $command;
+    }
+
+    public static function commandForOperation($ast)
+    {
+        if(!self::isOperation($ast)){
+            return false;
+        }
+        $command = false;
+
+        switch ($ast['op']) {
+            case '+':
+                $command = 'AD';
+                break;
+            case '-':
+                $command = 'SU';
+                break;
+            case '*':
+                $command = 'MU';
+                break;
+            case '/':
+                $command = 'DI';
+                break;
+        }
+
+        return $command;
+    }
+
+    /**
+     * Is it operation ( *, /, + or - )
+     *
+     * @param $ast
+     * @return bool
+     */
+    public static function isOperation($ast)
+    {
+        $operationSigns = ['*', '/', '+', '-',];
+
+        return in_array($ast['op'], $operationSigns);
+    }
+
+    /**
+     * Is it arg or imm
+     *
+     * @param $ast
+     * @return bool
+     */
+    public static function isTrivial($ast)
+    {
+        $trivialElements = ['imm', 'arg'];
+
+        return in_array($ast['op'], $trivialElements);
+    }
+
+    /**
+     * Trivial operation: <arg|imm> <operation> <arg|imm>
+     * Example: x + 5, 23 / y, etc
+     *
+     * @param $ast
+     * @return bool
+     */
+    public static function isTrivialOperation($ast)
+    {
+        $isOperationTrivial = self::isOperation($ast);
+        $isATrivial = isset($ast['a']) && self::isTrivial($ast['a']);
+        $isBTrivial = isset($ast['b']) && self::isTrivial($ast['b']);
+
+        return $isOperationTrivial && $isATrivial && $isBTrivial;
+    }
+
     // Here is a simulator for the target machine.
     // It takes an array of assembly instructions and an array of arguments and returns the result.
-    function simulate($asm, $argv) {
+    function simulate($asm, $argv)
+    {
         list($r0, $r1) = [0, 0];
         $stack = [];
         foreach ($asm as $ins) {
             if (substr($ins, 0, 2) == 'IM' || substr($ins, 0, 2) == 'AR') {
                 list($ins, $n) = [substr($ins, 0, 2), intval(substr($ins, 2))];
             }
-            if ($ins == 'IM')      $r0 = $n;
+            if ($ins == 'IM') $r0 = $n;
             else if ($ins == 'AR') $r0 = $argv[$n];
             else if ($ins == 'SW') list($r0, $r1) = [$r1, $r0];
             else if ($ins == 'PU') array_push($stack, $r0);

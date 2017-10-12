@@ -167,7 +167,6 @@ class CompilerTest extends TestCase
     public function progsProvider()
     {
         return [
-//            ['[ x ] 1 + 4 + x', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
             ['[ x y ] x + y', ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]]],
             ['[ asd gg ] gg * asd', ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]]],
             ['[ x y z ] x + y + z', ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]]],
@@ -198,8 +197,8 @@ class CompilerTest extends TestCase
         return [
             [
                 //[ x ] 1 + 4 + x
-                ['op'=>'+','a'=>['op'=>'+','a'=>['op'=>'imm','n'=>1,],'b'=>['op'=>'imm','n'=>4,],],'b'=>['op'=>'arg','n'=>0,],],
-                ['op'=>'+','a'=>['op'=>'imm','n'=>5,],'b'=>['op'=>'arg','n'=>0,],],
+                ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'imm', 'n' => 1,], 'b' => ['op' => 'imm', 'n' => 4,],], 'b' => ['op' => 'arg', 'n' => 0,],],
+                ['op' => '+', 'a' => ['op' => 'imm', 'n' => 5,], 'b' => ['op' => 'arg', 'n' => 0,],],
             ]
         ];
     }
@@ -216,5 +215,109 @@ class CompilerTest extends TestCase
         $p2 = $c->pass2($p1);
 
         $this->assertEquals($p2, json_decode($t2, true), 'Pass2');
+    }
+
+    /**
+     * @dataProvider operationsProvider
+     */
+    public function testIsOperation($ast, $result)
+    {
+        $isOperation = Compiler::isOperation($ast);
+        $this->assertEquals($isOperation, $result);
+    }
+
+    public function operationsProvider()
+    {
+        return [
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], true],
+            [['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], true],
+            [['op' => '-', 'a' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], true],
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => 'arg', 'n' => 1,],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3,], 'b' => ['op' => 'arg', 'n' => 4,],],], 'b' => ['op' => 'arg', 'n' => 2,],], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1,], 'b' => ['op' => 'arg', 'n' => 3,],],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 4,], 'b' => ['op' => 'arg', 'n' => 2,],],], true],
+            [['op' => 'arg', 'n' => 0], false],
+            [['op' => 'imm', 'n' => 0], false],
+            [['op' => 'imm', 'n' => 213], false],
+        ];
+    }
+
+    /**
+     * @dataProvider trivialsProvider
+     */
+    public function testTrivial($ast, $result)
+    {
+        $isOperation = Compiler::isTrivial($ast);
+        $this->assertEquals($isOperation, $result);
+    }
+
+    public function trivialsProvider()
+    {
+        return [
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], false],
+            [['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '-', 'a' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => 'arg', 'n' => 1,],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3,], 'b' => ['op' => 'arg', 'n' => 4,],],], 'b' => ['op' => 'arg', 'n' => 2,],], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1,], 'b' => ['op' => 'arg', 'n' => 3,],],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 4,], 'b' => ['op' => 'arg', 'n' => 2,],],], false],
+            [['op' => 'arg', 'n' => 0], true],
+            [['op' => 'imm', 'n' => 0], true],
+            [['op' => 'imm', 'n' => 213], true],
+        ];
+    }
+
+    /**
+     * @dataProvider trivialsOperationProvider
+     */
+    public function testIsTrivialOperation($ast, $result)
+    {
+        $isOperation = Compiler::isTrivialOperation($ast);
+        $this->assertEquals($isOperation, $result);
+    }
+
+    public function trivialsOperationProvider()
+    {
+        return [
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], true],
+            [['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 0]], true],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '-', 'a' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => '*', 'a' => ['op' => 'arg', 'n' => 1], 'b' => ['op' => 'arg', 'n' => 2]]], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => 'arg', 'n' => 2]], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => 'arg', 'n' => 1,],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3,], 'b' => ['op' => 'arg', 'n' => 4,],],], 'b' => ['op' => 'arg', 'n' => 2,],], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], 'b' => ['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 3], 'b' => ['op' => 'arg', 'n' => 4]], 'b' => ['op' => 'arg', 'n' => 2]],], false],
+            [['op' => '+', 'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0,], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 1,], 'b' => ['op' => 'arg', 'n' => 3,],],], 'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 4,], 'b' => ['op' => 'arg', 'n' => 2,],],], false],
+            [['op' => 'arg', 'n' => 0], false],
+            [['op' => 'imm', 'n' => 0], false],
+            [['op' => 'imm', 'n' => 213], false],
+        ];
+    }
+
+    /**
+     * @dataProvider assemblyProvider
+     */
+    public function testAssembly($ast, $result)
+    {
+        $c = new Compiler();
+
+        $assebled = $c->assemble($ast);
+
+        $this->assertEquals($assebled, $result);
+
+    }
+
+    public function assemblyProvider()
+    {
+        return [
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]],  [ 'AR 0', 'SW', 'AR 1', 'AD' ]],
+            [['op' => '/', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'imm', 'n' => 43]],  [ 'AR 0', 'SW', 'IM 43', 'DI' ]],
+            [['op' => '*', 'a' => ['op' => 'imm', 'n' => 8], 'b' => ['op' => 'imm', 'n' => 11]],  [ 'IM 8', 'SW', 'IM 11', 'MU' ]],
+            [['op' => '-', 'a' => ['op' => 'imm', 'n' => 889], 'b' => ['op' => 'arg', 'n' => 0]],  [ 'IM 889', 'SW', 'AR 0', 'SU' ]],
+        ];
     }
 }
