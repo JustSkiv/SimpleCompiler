@@ -304,12 +304,29 @@ class Compiler
     {
         $commands = [];
 
-        if (self::isTrivialOperation($ast)) {
-            $commands[] = self::commandLoad($ast['a']);
+        if (self::isOperation($ast)) {
+            // work with arg A
+            if (self::isTrivial($ast['a'])) {
+                $commands[] = self::commandLoad($ast['a']);
+            } else {
+                // assemble this arg
+                $subCommands = $this->assemble($ast['a']);
+
+                // TODO: need to do smth with older results (swap etc)
+                $commands = array_merge($commands, $subCommands);
+
+                // TODO: mb, it better to place at end of funtion?
+                $commands[] = 'PU';
+            }
 
             $commands[] = 'SW';
 
-            $commands[] = self::commandLoad($ast['b']);
+            // work with arg B
+            if (self::isTrivial($ast['b'])) {
+                $commands[] = self::commandLoad($ast['b']);
+            } else {
+                return false;
+            }
 
             $commands[] = self::commandForOperation($ast);
         }
@@ -319,7 +336,7 @@ class Compiler
 
     public static function commandLoad($ast)
     {
-        if(!self::isTrivial($ast)){
+        if (!self::isTrivial($ast)) {
             return false;
         }
 
@@ -341,7 +358,7 @@ class Compiler
 
     public static function commandForOperation($ast)
     {
-        if(!self::isOperation($ast)){
+        if (!self::isOperation($ast)) {
             return false;
         }
         $command = false;
