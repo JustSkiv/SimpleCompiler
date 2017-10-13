@@ -14,7 +14,7 @@ use src\codewars\compiler\Compiler;
 class CompilerTest extends TestCase
 {
 
-    /*public function testSimpleProg() {
+    public function testSimpleProg() {
         $prog = '[ x y z ] ( 2*3*x + 5*y - 3*z ) / (1 + 3 + 2*2)';
         $c = new Compiler();
 
@@ -27,10 +27,11 @@ class CompilerTest extends TestCase
         $this->assertEquals($p2, json_decode($t2, true), 'Pass2');
 
         $p3 = $c->pass3($p2);
-        $this->assertEquals(simulate($p3, [4,0,0]), 3, 'prog(4,0,0) == 3');
-        $this->assertEquals(simulate($p3, [4,8,0]), 8, 'prog(4,8,0) == 8');
-        $this->assertEquals(simulate($p3, [4,8,16]), 2, 'prog(4,8,6) == 2');
-    }*/
+        $this->assertEquals($c->simulate($p3, [4,0,0]), 3, 'prog(4,0,0) == 3');
+        $this->assertEquals($c->simulate($p3, [4,8,0]), 8, 'prog(4,8,0) == 8');
+        $this->assertEquals($c->simulate($p3, [4,8,16]), 2, 'prog(4,8,6) == 2');
+    }
+
 
     public function testGetArgs()
     {
@@ -307,17 +308,21 @@ class CompilerTest extends TestCase
 
         $assebled = $c->assemble($ast);
 
-        $this->assertEquals($assebled, $result);
+        $this->assertEquals($result, $assebled);
 
     }
 
     public function assemblyProvider()
     {
         return [
-            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]],  [ 'AR 0', 'SW', 'AR 1', 'AD' ]],
-            [['op' => '/', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'imm', 'n' => 43]],  [ 'AR 0', 'SW', 'IM 43', 'DI' ]],
-            [['op' => '*', 'a' => ['op' => 'imm', 'n' => 8], 'b' => ['op' => 'imm', 'n' => 11]],  [ 'IM 8', 'SW', 'IM 11', 'MU' ]],
-            [['op' => '-', 'a' => ['op' => 'imm', 'n' => 889], 'b' => ['op' => 'arg', 'n' => 0]],  [ 'IM 889', 'SW', 'AR 0', 'SU' ]],
+            [['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]], ['AR 0', 'SW', 'AR 1', 'SW', 'AD']],
+            [['op' => '/', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'imm', 'n' => 43]], ['AR 0', 'SW', 'IM 43', 'SW', 'DI']],
+            [['op' => '*', 'a' => ['op' => 'imm', 'n' => 8], 'b' => ['op' => 'imm', 'n' => 11]], ['IM 8', 'SW', 'IM 11', 'SW', 'MU']],
+            [['op' => '-', 'a' => ['op' => 'imm', 'n' => 889], 'b' => ['op' => 'arg', 'n' => 0]], ['IM 889', 'SW', 'AR 0', 'SW', 'SU']],
+            [['op' => '+',
+                'a' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 0], 'b' => ['op' => 'arg', 'n' => 1]],
+                'b' => ['op' => '+', 'a' => ['op' => 'arg', 'n' => 2], 'b' => ['op' => 'arg', 'n' => 3]]],
+                ['AR 0','SW','AR 1','SW','AD','PU','AR 2','SW','AR 3','SW','AD','SW','PO','AD']],
         ];
     }
 }

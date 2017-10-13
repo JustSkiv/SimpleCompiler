@@ -8,11 +8,6 @@ namespace src\codewars\compiler;
 
 class Compiler
 {
-    /*public function compile($program)
-    {
-        return $this->pass3($this->pass2($this->pass1($program)));
-    }*/
-
     public function tokenize($program)
     {
         /*
@@ -49,8 +44,7 @@ class Compiler
 
     public function pass3($ast)
     {
-        // Returns assembly instructions
-        return false;
+        return $this->assemble($ast);
     }
 
     /**
@@ -311,21 +305,21 @@ class Compiler
             } else {
                 // assemble this arg
                 $subCommands = $this->assemble($ast['a']);
-
-                // TODO: need to do smth with older results (swap etc)
                 $commands = array_merge($commands, $subCommands);
-
-                // TODO: mb, it better to place at end of funtion?
-                $commands[] = 'PU';
             }
 
-            $commands[] = 'SW';
 
             // work with arg B
             if (self::isTrivial($ast['b'])) {
+                $commands[] = 'SW';
                 $commands[] = self::commandLoad($ast['b']);
+                $commands[] = 'SW';
             } else {
-                return false;
+                $commands[] = 'PU';
+                $subCommands = $this->assemble($ast['b']);
+                $commands = array_merge($commands, $subCommands);
+                $commands[] = 'SW';
+                $commands[] = 'PO';
             }
 
             $commands[] = self::commandForOperation($ast);
@@ -423,8 +417,15 @@ class Compiler
         return $isOperationTrivial && $isATrivial && $isBTrivial;
     }
 
-    // Here is a simulator for the target machine.
-    // It takes an array of assembly instructions and an array of arguments and returns the result.
+
+    /**
+     * Here is a simulator for the target machine.
+     * It takes an array of assembly instructions and an array of arguments and returns the result.
+     *
+     * @param $asm
+     * @param $argv
+     * @return mixed
+     */
     function simulate($asm, $argv)
     {
         list($r0, $r1) = [0, 0];
